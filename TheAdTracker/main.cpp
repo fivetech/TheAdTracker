@@ -1,6 +1,6 @@
 //
 //  main.cpp
-//  Cascade Classifier
+//  TheAdTracker
 //
 //  Created by Tolga Durak on 25/02/16.
 //  Copyright © 2016 Tolga Durak. All rights reserved.
@@ -48,6 +48,7 @@ int main(int argc, const char * argv[]) {
     
     capture.set(CV_CAP_PROP_FRAME_WIDTH,640);
     capture.set(CV_CAP_PROP_FRAME_HEIGHT,480);
+    
     while ( capture.read(frame) )
     {
         if( frame.empty() )
@@ -74,22 +75,29 @@ void detectAndDisplay( Mat frame )
     equalizeHist( frame_gray, frame_gray );
     
     
-    face_cascade.detectMultiScale( frame_gray, faces, 1.1, 4, 0, Size(80, 80) );
+    face_cascade.detectMultiScale( frame_gray, faces, 1.1, 2, 0, Size(80, 80) );
     
-    for( size_t i = 0; i < faces.size(); i++ )
-    {
+    for( size_t i = 0; i < faces.size(); i++ ) {
         faceROI = frame_gray( faces[i] );
         std::vector<Rect> eyes;
-        eyes_cascade.detectMultiScale( faceROI, eyes, 1.2, 4, 0 |CASCADE_SCALE_IMAGE, Size(65, 65) );
+        eyes_cascade.detectMultiScale( faceROI, eyes, 2.5, 6, 0 |CASCADE_SCALE_IMAGE, Size(30, 30) );
         
-        rectangle(frame, faces[i], Scalar( 0, 255, 0 ), 1);
-        for( size_t j = 0; j < eyes.size(); j++ )
-        {
-            Point pt1(faces[i].x+eyes[j].x, faces[i].y+eyes[j].y);
+        rectangle(frame, faces[i], Scalar( 0, 255, 0 ), 1); // Displays face rectange
+ 
+        
+            for( size_t j = 0; j < eyes.size(); j++ ) {
+           /* Point pt1(faces[i].x+eyes[j].x, faces[i].y+eyes[j].y);
             Point pt2(faces[i].x + eyes[j].x + eyes[j].width, faces[i].y + eyes[j].y + eyes[j].height);
-            
-            rectangle( frame, pt1, pt2, Scalar(0, 255,0), 1);
-        }
+            rectangle( frame, pt1, pt2, Scalar(0, 255,0), 1);*/
+               
+                   Rect rect = eyes[j] + cv::Point(faces[i].x, faces[i].y);
+                    
+                    rectangle(frame, rect, Scalar( 0, 255, 0 ), 1);
+                
+       /* Rect rect = eyes[j] + cv::Point(faces[i].x, faces[i].y);
+                rectangle(frame, rect, Scalar( 0, 255, 0 ), 1);*/
+            }
+        
     }
     
     imshow( window_name, frame );
