@@ -225,7 +225,6 @@
 					"-lopencv_shape",
 					"-lopencv_stitching",
 					"-lopencv_superres",
-					"-lopencv_ts",
 					"-lopencv_video",
 					"-lopencv_videoio",
 					"-lopencv_videostab",
@@ -253,7 +252,6 @@
 					"-lopencv_shape",
 					"-lopencv_stitching",
 					"-lopencv_superres",
-					"-lopencv_ts",
 					"-lopencv_video",
 					"-lopencv_videoio",
 					"-lopencv_videostab",
@@ -281,6 +279,7 @@
 				3731300F1CB036A000755AE6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
