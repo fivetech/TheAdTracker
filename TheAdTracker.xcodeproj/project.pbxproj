@@ -209,8 +209,8 @@
 		3731300E1CB036A000755AE6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				HEADER_SEARCH_PATHS = /usr/local/opt/opencv3/include;
-				LIBRARY_SEARCH_PATHS = /usr/local/opt/opencv3/lib;
+				HEADER_SEARCH_PATHS = /usr/local/include/;
+				LIBRARY_SEARCH_PATHS = /usr/local/lib/;
 				OTHER_LDFLAGS = (
 					"-lopencv_calib3d",
 					"-lopencv_core",
@@ -236,8 +236,8 @@
 		3731300F1CB036A000755AE6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				HEADER_SEARCH_PATHS = /usr/local/opt/opencv3/include;
-				LIBRARY_SEARCH_PATHS = /usr/local/opt/opencv3/lib;
+				HEADER_SEARCH_PATHS = /usr/local/include/;
+				LIBRARY_SEARCH_PATHS = /usr/local/lib/;
 				OTHER_LDFLAGS = (
 					"-lopencv_calib3d",
 					"-lopencv_core",

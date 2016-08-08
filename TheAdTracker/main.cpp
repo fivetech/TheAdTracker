@@ -21,7 +21,7 @@ using namespace cv;
 void detectAndDisplay( Mat frame );
 
 
-String face_cascade_name = "haarcascade_frontalface_alt2.xml";
+String face_cascade_name = "lbpcascade_frontalface.xml";
 String eyes_cascade_name = "haarcascade_eye.xml";
 
 // Cascade Classifiers
@@ -69,7 +69,7 @@ int main(int argc, const char * argv[]) {
         detectAndDisplay( frame );
         
         // Get char from keyboard
-        int c = waitKey(10);
+        int c = waitKey(1);
         
         // if char is esc break the loop
         if( (char)c == 27 ) { break; }
