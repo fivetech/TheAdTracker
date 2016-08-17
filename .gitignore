@@ -1,0 +1,11 @@
+*.pbxproj
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sdf
+*.sln
+*.VC.opendb
+/TheAdTracker/x64
+/.vs
+/x64
+/Debug

@@ -1,124 +1,220 @@
-//
-//  main.cpp
-//  TheAdTracker
-//
-//  Created by Tolga Durak on 25/02/16.
-//  Copyright © 2016 Tolga Durak. All rights reserved.
-//
-
-#include "opencv2/objdetect.hpp"
-#include "opencv2/videoio.hpp"
-#include "opencv2/highgui.hpp"
-#include "opencv2/imgproc.hpp"
+#include <opencv2/objdetect/objdetect.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <iostream>
+#include <queue>
 #include <stdio.h>
+#include <math.h>
 
-using namespace std;
-using namespace cv;
-
-// Function header that takes original image and detects faces and eyes.
-void detectAndDisplay( Mat frame );
+#include "constants.hpp"
+#include "findEyeCenter.hpp"
+#include "findEyeCorner.hpp"
 
 
-String face_cascade_name = "lbpcascade_frontalface.xml";
-String eyes_cascade_name = "haarcascade_eye.xml";
+/** Constants **/
 
-// Cascade Classifiers
-CascadeClassifier face_cascade;
-CascadeClassifier eyes_cascade;
 
-// Window Name
-String window_name = "Capture - Face and eye detection";
+/** Function Headers */
+void detectAndDisplay(cv::Mat frame);
 
-int main(int argc, const char * argv[]) {
-    
-    VideoCapture capture; // Camera source
-    Mat frame; // image object
-    
-    // Load face and eyes cascade
-    if( !face_cascade.load( face_cascade_name ) ) {
-        printf("--(!)Error loading face cascade\n");
-        return -1; };
-    if( !eyes_cascade.load( eyes_cascade_name ) ) {
-        printf("--(!)Error loading eyes cascade\n");
-        return -1; };
-    
-    // Open camera stream
-    // -1 for default camera
-    capture.open( -1 );
-    
-    // Check if it is opened properly
-    if ( ! capture.isOpened() ) { printf("--(!)Error opening video capture\n"); return -1; }
-    
-    // Set camera resolution
-    capture.set(CV_CAP_PROP_FRAME_WIDTH,640);
-    capture.set(CV_CAP_PROP_FRAME_HEIGHT,480);
-    
-    // Keep read from camera stream until specified key is pressed
-    while ( capture.read(frame) )
-    {
-        // Check if captured frame is empty
-        if( frame.empty() )
-        {
-            printf(" --(!) No captured frame -- Break!");
-            break;
-        }
-        
-        // Detect face and eyes region
-        detectAndDisplay( frame );
-        
-        // Get char from keyboard
-        int c = waitKey(1);
-        
-        // if char is esc break the loop
-        if( (char)c == 27 ) { break; }
-    }
-    
-    return 0;
+/** Global variables */
+//-- Note, either copy these two files from opencv/data/haarscascades to your current folder, or change these locations
+cv::String face_cascade_name = "../data/haarcascade_frontalface_alt.xml";
+cv::CascadeClassifier face_cascade;
+std::string main_window_name = "Capture - Face detection";
+std::string face_window_name = "Capture - Face";
+cv::RNG rng(12345);
+cv::Mat debugImage;
+cv::Mat skinCrCbHist = cv::Mat::zeros(cv::Size(256, 256), CV_8UC1);
+
+/**
+* @function main
+*/
+int main(int argc, const char** argv) {
+	cv::Mat frame;
+
+	// Load the cascades
+	if (!face_cascade.load(face_cascade_name)) { printf("--(!)Error loading face cascade, please change face_cascade_name in source code.\n"); return -1; };
+
+	cv::namedWindow(main_window_name, CV_WINDOW_NORMAL);
+	cv::moveWindow(main_window_name, 400, 100);
+	cv::namedWindow(face_window_name, CV_WINDOW_NORMAL);
+	cv::moveWindow(face_window_name, 10, 100);
+	//cv::namedWindow("Right Eye", CV_WINDOW_NORMAL);
+	//cv::moveWindow("Right Eye", 10, 600);
+	//cv::namedWindow("Left Eye", CV_WINDOW_NORMAL);
+	//cv::moveWindow("Left Eye", 10, 800);
+	//cv::namedWindow("aa", CV_WINDOW_NORMAL);
+	//cv::moveWindow("aa", 10, 800);
+	//cv::namedWindow("aaa", CV_WINDOW_NORMAL);
+	//cv::moveWindow("aaa", 10, 800);
+
+	createCornerKernels();
+	ellipse(skinCrCbHist, cv::Point(113, 155.6), cv::Size(23.4, 15.2),
+		43.0, 0.0, 360.0, cv::Scalar(255, 255, 255), -1);
+
+	// I make an attempt at supporting both 2.x and 3.x OpenCV
+#if CV_MAJOR_VERSION < 3
+	CvCapture* capture = cvCaptureFromCAM(0);
+	if (capture) {
+		while (true) {
+			frame = cvQueryFrame(capture);
+#else
+	cv::VideoCapture capture(0);
+	if (capture.isOpened()) {
+		while (true) {
+			capture.read(frame);
+#endif
+			// mirror it
+			cv::flip(frame, frame, 1);
+			frame.copyTo(debugImage);
+
+			// Apply the classifier to the frame
+			if (!frame.empty()) {
+				detectAndDisplay(frame);
+			}
+			else {
+				printf(" --(!) No captured frame -- Break!");
+				break;
+			}
+
+			imshow(main_window_name, debugImage);
+
+			int c = cv::waitKey(10);
+			if ((char)c == 'c') { break; }
+			if ((char)c == 'f') {
+				imwrite("frame.png", frame);
+			}
+
+		}
+	}
+	releaseCornerKernels();
+	return 0;
 }
 
-void detectAndDisplay( Mat frame )
-{
-    
-    std::vector<Rect> faces; // Region of faces
-    Mat faceROI; // Gray image of region of face
-    Mat frame_gray; // Gray image of original frame
-   
-    // Convert image to GRAY image
-    cvtColor( frame, frame_gray, COLOR_BGR2GRAY );
-    
-    // Equalize the histogram to normalize the brightness and increases the contrast of the image
-    equalizeHist( frame_gray, frame_gray );
-    
-    // Detect faces objects of different sizes in the input image and return a list of rectangles
-    face_cascade.detectMultiScale( frame_gray, faces, 1.1, 2, 0, Size(80, 80) );
-    
-    // Iterate through the list of faces
-    for( size_t i = 0; i < faces.size(); i++ ) {
-       
-        // Create faceROI in GRAY
-        faceROI = frame_gray( faces[i] );
-        
-        std::vector<Rect> eyes; // Region of eyes
-        
-        // Detect eyes objects of different sizes in the input image and return a list of rectangles
-        eyes_cascade.detectMultiScale( faceROI, eyes, 2.5, 7, 0 |CASCADE_SCALE_IMAGE, Size(30, 30) );
-        
-        // Draw face region on to original image
-        rectangle(frame, faces[i], Scalar( 0, 255, 0 ), 1);
-        
-        // Iterate through the list of eyes for a face
-        for( size_t j = 0; j < eyes.size(); j++ ) {
-           
-            // Create rectangle object that hold region of an eye
-            Rect rect = eyes[j] + cv::Point(faces[i].x, faces[i].y);
-            
-            // Draw eye region on to original image
-            rectangle(frame, rect, Scalar( 0, 255, 0 ), 1);
-        }
-        
-    }
-    // Show frame object in a window
-    imshow( window_name, frame );
+void findEyes(cv::Mat frame_gray, cv::Rect face) {
+	cv::Mat faceROI = frame_gray(face);
+	cv::Mat debugFace = faceROI;
+
+	if (kSmoothFaceImage) {
+		double sigma = kSmoothFaceFactor * face.width;
+		GaussianBlur(faceROI, faceROI, cv::Size(0, 0), sigma);
+	}
+	//-- Find eye regions and draw them
+	int eye_region_width = face.width * (kEyePercentWidth / 100.0);
+	int eye_region_height = face.width * (kEyePercentHeight / 100.0);
+	int eye_region_top = face.height * (kEyePercentTop / 100.0);
+	cv::Rect leftEyeRegion(face.width*(kEyePercentSide / 100.0),
+		eye_region_top, eye_region_width, eye_region_height);
+	cv::Rect rightEyeRegion(face.width - eye_region_width - face.width*(kEyePercentSide / 100.0),
+		eye_region_top, eye_region_width, eye_region_height);
+
+	//-- Find Eye Centers
+	cv::Point leftPupil = findEyeCenter(faceROI, leftEyeRegion, "Left Eye");
+	cv::Point rightPupil = findEyeCenter(faceROI, rightEyeRegion, "Right Eye");
+	// get corner regions
+	cv::Rect leftRightCornerRegion(leftEyeRegion);
+	leftRightCornerRegion.width -= leftPupil.x;
+	leftRightCornerRegion.x += leftPupil.x;
+	leftRightCornerRegion.height /= 2;
+	leftRightCornerRegion.y += leftRightCornerRegion.height / 2;
+	cv::Rect leftLeftCornerRegion(leftEyeRegion);
+	leftLeftCornerRegion.width = leftPupil.x;
+	leftLeftCornerRegion.height /= 2;
+	leftLeftCornerRegion.y += leftLeftCornerRegion.height / 2;
+	cv::Rect rightLeftCornerRegion(rightEyeRegion);
+	rightLeftCornerRegion.width = rightPupil.x;
+	rightLeftCornerRegion.height /= 2;
+	rightLeftCornerRegion.y += rightLeftCornerRegion.height / 2;
+	cv::Rect rightRightCornerRegion(rightEyeRegion);
+	rightRightCornerRegion.width -= rightPupil.x;
+	rightRightCornerRegion.x += rightPupil.x;
+	rightRightCornerRegion.height /= 2;
+	rightRightCornerRegion.y += rightRightCornerRegion.height / 2;
+	rectangle(debugFace, leftRightCornerRegion, 200);
+	rectangle(debugFace, leftLeftCornerRegion, 200);
+	rectangle(debugFace, rightLeftCornerRegion, 200);
+	rectangle(debugFace, rightRightCornerRegion, 200);
+	// change eye centers to face coordinates
+	rightPupil.x += rightEyeRegion.x;
+	rightPupil.y += rightEyeRegion.y;
+	leftPupil.x += leftEyeRegion.x;
+	leftPupil.y += leftEyeRegion.y;
+	// draw eye centers
+	circle(debugImage, rightPupil + cv::Point(face.x, face.y), 3, 1234);
+	circle(debugImage, leftPupil + cv::Point(face.x, face.y), 3, 1234);
+	circle(debugFace, rightPupil, 3, 1234);
+	circle(debugFace, leftPupil, 3, 1234);
+	//-- Find Eye Corners
+	if (kEnableEyeCorner) {
+		cv::Point2f leftRightCorner = findEyeCorner(faceROI(leftRightCornerRegion), true, false);
+		leftRightCorner.x += leftRightCornerRegion.x;
+		leftRightCorner.y += leftRightCornerRegion.y;
+		cv::Point2f leftLeftCorner = findEyeCorner(faceROI(leftLeftCornerRegion), true, true);
+		leftLeftCorner.x += leftLeftCornerRegion.x;
+		leftLeftCorner.y += leftLeftCornerRegion.y;
+		cv::Point2f rightLeftCorner = findEyeCorner(faceROI(rightLeftCornerRegion), false, true);
+		rightLeftCorner.x += rightLeftCornerRegion.x;
+		rightLeftCorner.y += rightLeftCornerRegion.y;
+		cv::Point2f rightRightCorner = findEyeCorner(faceROI(rightRightCornerRegion), false, false);
+		rightRightCorner.x += rightRightCornerRegion.x;
+		rightRightCorner.y += rightRightCornerRegion.y;
+		circle(debugImage, leftRightCorner, 3, 200);
+		circle(debugImage, leftLeftCorner, 3, 200);
+		circle(debugImage, rightLeftCorner, 3, 200);
+		circle(debugImage, rightRightCorner, 3, 200);
+	}
+
+	imshow(face_window_name, faceROI);
+}
+
+
+cv::Mat findSkin(cv::Mat &frame) {
+	cv::Mat input;
+	cv::Mat output = cv::Mat(frame.rows, frame.cols, CV_8U);
+
+	cvtColor(frame, input, CV_BGR2YCrCb);
+
+	for (int y = 0; y < input.rows; ++y) {
+		const cv::Vec3b *Mr = input.ptr<cv::Vec3b>(y);
+		//    uchar *Or = output.ptr<uchar>(y);
+		cv::Vec3b *Or = frame.ptr<cv::Vec3b>(y);
+		for (int x = 0; x < input.cols; ++x) {
+			cv::Vec3b ycrcb = Mr[x];
+			//      Or[x] = (skinCrCbHist.at<uchar>(ycrcb[1], ycrcb[2]) > 0) ? 255 : 0;
+			if (skinCrCbHist.at<uchar>(ycrcb[1], ycrcb[2]) == 0) {
+				Or[x] = cv::Vec3b(0, 0, 0);
+			}
+		}
+	}
+	return output;
+}
+
+/**
+* @function detectAndDisplay
+*/
+void detectAndDisplay(cv::Mat frame) {
+	std::vector<cv::Rect> faces;
+	//cv::Mat frame_gray;
+
+	std::vector<cv::Mat> rgbChannels(3);
+	cv::split(frame, rgbChannels);
+	cv::Mat frame_gray = rgbChannels[2];
+
+	//cvtColor( frame, frame_gray, CV_BGR2GRAY );
+	//equalizeHist( frame_gray, frame_gray );
+	//cv::pow(frame_gray, CV_64F, frame_gray);
+	//-- Detect faces
+	face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE | CV_HAAR_FIND_BIGGEST_OBJECT, cv::Size(150, 150));
+	//  findSkin(debugImage);
+
+	for (int i = 0; i < faces.size(); i++)
+	{
+		rectangle(debugImage, faces[i], 1234);
+	}
+	//-- Show what you got
+	if (faces.size() > 0) {
+		findEyes(frame_gray, faces[0]);
+	}
 }
