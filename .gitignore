@@ -9,3 +9,4 @@
 /.vs
 /x64
 /Debug
+*.xcodeproj
