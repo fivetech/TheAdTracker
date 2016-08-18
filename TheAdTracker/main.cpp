@@ -51,7 +51,7 @@ int main(int argc, const char** argv) {
 	//cv::moveWindow("aaa", 10, 800);
 
 	createCornerKernels();
-	ellipse(skinCrCbHist, cv::Point(113, 155.6), cv::Size(23.4, 15.2),
+	ellipse(skinCrCbHist, cv::Point(113, static_cast<int>(155.6)), cv::Size(static_cast<int>(23.4), static_cast<int>(15.2)),
 		43.0, 0.0, 360.0, cv::Scalar(255, 255, 255), -1);
 
 	// I make an attempt at supporting both 2.x and 3.x OpenCV
@@ -102,12 +102,12 @@ void findEyes(cv::Mat frame_gray, cv::Rect face) {
 		GaussianBlur(faceROI, faceROI, cv::Size(0, 0), sigma);
 	}
 	//-- Find eye regions and draw them
-	int eye_region_width = face.width * (kEyePercentWidth / 100.0);
-	int eye_region_height = face.width * (kEyePercentHeight / 100.0);
-	int eye_region_top = face.height * (kEyePercentTop / 100.0);
-	cv::Rect leftEyeRegion(face.width*(kEyePercentSide / 100.0),
+	int eye_region_width = static_cast<int>(face.width * (kEyePercentWidth / 100.0));
+	int eye_region_height = static_cast<int>(face.width * (kEyePercentHeight / 100.0));
+	int eye_region_top = static_cast<int>(face.height * (kEyePercentTop / 100.0));
+	cv::Rect leftEyeRegion(static_cast<int>(face.width*(kEyePercentSide / 100.0)),
 		eye_region_top, eye_region_width, eye_region_height);
-	cv::Rect rightEyeRegion(face.width - eye_region_width - face.width*(kEyePercentSide / 100.0),
+	cv::Rect rightEyeRegion(static_cast<int>(face.width - eye_region_width - face.width*(kEyePercentSide / 100.0)),
 		eye_region_top, eye_region_width, eye_region_height);
 
 	//-- Find Eye Centers

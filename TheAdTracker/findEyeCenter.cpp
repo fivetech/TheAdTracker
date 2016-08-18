@@ -12,19 +12,19 @@
 // Pre-declarations
 cv::Mat floodKillEdges(cv::Mat &mat);
 
-#pragma mark Visualization
 
-#pragma mark Helpers
+
+
 
 cv::Point unscalePoint(cv::Point p, cv::Rect origSize) {
 	float ratio = (((float)kFastEyeWidth) / origSize.width);
-	int x = round(p.x / ratio);
-	int y = round(p.y / ratio);
+	int x = static_cast<int>(round(p.x / ratio));
+	int y = static_cast<int>(round(p.y / ratio));
 	return cv::Point(x, y);
 }
 
 void scaleToFastSize(const cv::Mat &src, cv::Mat &dst) {
-	cv::resize(src, dst, cv::Size(kFastEyeWidth, (((float)kFastEyeWidth) / src.cols) * src.rows));
+	cv::resize(src, dst, cv::Size(kFastEyeWidth, static_cast<int>((((float)kFastEyeWidth) / src.cols) * src.rows)));
 }
 
 cv::Mat computeMatXGradient(const cv::Mat &mat) {
@@ -44,7 +44,7 @@ cv::Mat computeMatXGradient(const cv::Mat &mat) {
 	return out;
 }
 
-#pragma mark Main Algorithm
+
 
 void testPossibleCentersFormula(int x, int y, const cv::Mat &weight, double gx, double gy, cv::Mat &out) {
 	// for all possible centers
@@ -163,7 +163,7 @@ cv::Point findEyeCenter(cv::Mat face, cv::Rect eye, std::string debugWindow) {
 	return unscalePoint(maxP, eye);
 }
 
-#pragma mark Postprocessing
+
 
 bool floodShouldPushPoint(const cv::Point &np, const cv::Mat &mat) {
 	return inMat(np, mat.rows, mat.cols);

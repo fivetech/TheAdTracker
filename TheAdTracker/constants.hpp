@@ -12,7 +12,7 @@ const int kEyePercentWidth = 35;
 
 // Preprocessing
 const bool kSmoothFaceImage = false;
-const float kSmoothFaceFactor = 0.005;
+const float kSmoothFaceFactor = 0.005f;
 
 // Algorithm Parameters
 const int kFastEyeWidth = 50;
@@ -23,7 +23,7 @@ const double kGradientThreshold = 50.0;
 
 // Postprocessing
 const bool kEnablePostProcess = true;
-const float kPostProcessThreshold = 0.97;
+const float kPostProcessThreshold = 0.97f;
 
 // Eye Corner
 const bool kEnableEyeCorner = false;
