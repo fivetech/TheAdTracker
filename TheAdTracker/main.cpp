@@ -20,7 +20,7 @@ void detectAndDisplay(cv::Mat frame);
 
 /** Global variables */
 //-- Note, either copy these two files from opencv/data/haarscascades to your current folder, or change these locations
-cv::String face_cascade_name = "../data/haarcascade_frontalface_alt.xml";
+
 cv::CascadeClassifier face_cascade;
 std::string main_window_name = "Capture - Face detection";
 std::string face_window_name = "Capture - Face";
@@ -33,7 +33,7 @@ cv::Mat skinCrCbHist = cv::Mat::zeros(cv::Size(256, 256), CV_8UC1);
 */
 int main(int argc, const char** argv) {
 	cv::Mat frame;
-
+cv::String face_cascade_name = argv[1];
 	// Load the cascades
 	if (!face_cascade.load(face_cascade_name)) { printf("--(!)Error loading face cascade, please change face_cascade_name in source code.\n"); return -1; };
 
