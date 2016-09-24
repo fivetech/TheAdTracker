@@ -33,7 +33,7 @@ cv::Mat skinCrCbHist = cv::Mat::zeros(cv::Size(256, 256), CV_8UC1);
 */
 int main(int argc, const char** argv) {
 	cv::Mat frame;
-cv::String face_cascade_name = argv[1];
+	cv::String face_cascade_name = argv[1];
 	// Load the cascades
 	if (!face_cascade.load(face_cascade_name)) { printf("--(!)Error loading face cascade, please change face_cascade_name in source code.\n"); return -1; };
 
@@ -138,44 +138,49 @@ void findEyes(cv::Mat frame_gray, cv::Rect face) {
 	rectangle(debugFace, rightRightCornerRegion, 200);
 
 	/*
-	To show in debugImage
+	To draw eye location in debugImage
 	*/
-	cv::Rect leftEyeRegionDebugImage(leftEyeRegion);
-	cv::Rect rightEyeRegionDebugImage(rightEyeRegion);
-	leftEyeRegionDebugImage.x += face.x;
-	rightEyeRegionDebugImage.x += face.x;
-	leftEyeRegionDebugImage.y += face.y;
-	rightEyeRegionDebugImage.y += face.y;
-	cv::Rect leftLeftCornerRegionDebugImage(leftEyeRegionDebugImage);
-	cv::Rect rightRightCornerRegionDebugImage(rightEyeRegionDebugImage);
-	cv::Rect leftRightCornerRegionDebugImage(leftEyeRegionDebugImage);
-	cv::Rect rightLeftCornerRegionDebugImage(rightEyeRegionDebugImage);
-	
-	leftRightCornerRegionDebugImage.width -= leftPupil.x;
-	leftRightCornerRegionDebugImage.x += leftPupil.x;
-	leftRightCornerRegionDebugImage.height /= 2;
-	leftRightCornerRegionDebugImage.y += leftRightCornerRegionDebugImage.height / 2;
-	
-	leftLeftCornerRegionDebugImage.width = leftPupil.x;
-	leftLeftCornerRegionDebugImage.height /= 2;
-	leftLeftCornerRegionDebugImage.y += leftLeftCornerRegionDebugImage.height / 2;
-	
-	rightLeftCornerRegionDebugImage.width = rightPupil.x;
-	rightLeftCornerRegionDebugImage.height /= 2;
-	rightLeftCornerRegionDebugImage.y += rightLeftCornerRegionDebugImage.height / 2;
-	
-	rightRightCornerRegionDebugImage.width -= rightPupil.x;
-	rightRightCornerRegionDebugImage.x += rightPupil.x;
-	rightRightCornerRegionDebugImage.height /= 2;
-	rightRightCornerRegionDebugImage.y += rightRightCornerRegionDebugImage.height / 2;
+	if (kDrawEyeRegionsDebugImage) {
+		cv::Rect leftEyeRegionDebugImage(leftEyeRegion);
+		cv::Rect rightEyeRegionDebugImage(rightEyeRegion);
+		leftEyeRegionDebugImage.x += face.x;
+		rightEyeRegionDebugImage.x += face.x;
+		leftEyeRegionDebugImage.y += face.y;
+		rightEyeRegionDebugImage.y += face.y;
+		cv::Rect leftLeftCornerRegionDebugImage(leftEyeRegionDebugImage);
+		cv::Rect rightRightCornerRegionDebugImage(rightEyeRegionDebugImage);
+		cv::Rect leftRightCornerRegionDebugImage(leftEyeRegionDebugImage);
+		cv::Rect rightLeftCornerRegionDebugImage(rightEyeRegionDebugImage);
 
-	rectangle(debugImage, leftEyeRegionDebugImage, 200);
-	rectangle(debugImage, rightEyeRegionDebugImage, 200);
-	
-	rectangle(debugImage, leftRightCornerRegionDebugImage, 200);
-	rectangle(debugImage, leftLeftCornerRegionDebugImage, 200);
-	rectangle(debugImage, rightLeftCornerRegionDebugImage, 200);
-	rectangle(debugImage, rightRightCornerRegionDebugImage, 200);
+		leftRightCornerRegionDebugImage.width -= leftPupil.x;
+		leftRightCornerRegionDebugImage.x += leftPupil.x;
+		leftRightCornerRegionDebugImage.height /= 2;
+		leftRightCornerRegionDebugImage.y += leftRightCornerRegionDebugImage.height / 2;
+
+		leftLeftCornerRegionDebugImage.width = leftPupil.x;
+		leftLeftCornerRegionDebugImage.height /= 2;
+		leftLeftCornerRegionDebugImage.y += leftLeftCornerRegionDebugImage.height / 2;
+
+		rightLeftCornerRegionDebugImage.width = rightPupil.x;
+		rightLeftCornerRegionDebugImage.height /= 2;
+		rightLeftCornerRegionDebugImage.y += rightLeftCornerRegionDebugImage.height / 2;
+
+		rightRightCornerRegionDebugImage.width -= rightPupil.x;
+		rightRightCornerRegionDebugImage.x += rightPupil.x;
+		rightRightCornerRegionDebugImage.height /= 2;
+		rightRightCornerRegionDebugImage.y += rightRightCornerRegionDebugImage.height / 2;
+
+		rectangle(debugImage, leftEyeRegionDebugImage, 200);
+		rectangle(debugImage, rightEyeRegionDebugImage, 200);
+
+		rectangle(debugImage, leftRightCornerRegionDebugImage, 200);
+		rectangle(debugImage, leftLeftCornerRegionDebugImage, 200);
+		rectangle(debugImage, rightLeftCornerRegionDebugImage, 200);
+		rectangle(debugImage, rightRightCornerRegionDebugImage, 200);
+		circle(debugImage, rightPupil + cv::Point(face.x, face.y), 3, cv::Scalar(255, 255, 255));
+		circle(debugImage, leftPupil + cv::Point(face.x, face.y), 3, cv::Scalar(255, 255, 255));
+	}
+
 	/*
 	To show in debugImage
 	*/
@@ -185,8 +190,6 @@ void findEyes(cv::Mat frame_gray, cv::Rect face) {
 	leftPupil.x += leftEyeRegion.x;
 	leftPupil.y += leftEyeRegion.y;
 	// draw eye centers
-	circle(debugImage, rightPupil + cv::Point(face.x, face.y), 3, cv::Scalar(255, 255, 255));
-	circle(debugImage, leftPupil + cv::Point(face.x, face.y), 3, cv::Scalar(255, 255, 255));
 	circle(debugFace, rightPupil, 3, 1234);
 	circle(debugFace, leftPupil, 3, 1234);
 	//-- Find Eye Corners
